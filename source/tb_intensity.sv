@@ -2,7 +2,7 @@
 
 module tb_intensity();
 // Define parameters
-parameter CLK_PERIOD	= 2.5;
+parameter CLK_PERIOD	= 2; //50 MHZ
 parameter NUM_TESTS 	= 9;
 parameter MAX_TEST_BIT = NUM_TESTS -1;
 parameter MAX_OUTPUT_BIT = 71;
@@ -17,7 +17,7 @@ reg [MAX_INPUT_BIT:0] tb_pixelData;
 wire [MAX_OUTPUT_BIT:0] tb_iGrid;
 
 // Test Bench Debug Signals
-integer tb_test_case;
+integer tb_test_case, i;
 reg [7:0] r0, r1, r2, r3, r4,r5,r6,r7,r8;
 reg [7:0] g0, g1, g2, g3 ,g4,g5,g6,g7,g8;
 reg [7:0] b0, b1, b2 ,b3 ,b4,b5,b6,b7,b8;
@@ -27,10 +27,10 @@ reg [71:0] test_red = {
 8'd20, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd140, 8'd160};
 
 reg [71:0] test_blue = {
-8'd0, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd140, 8'd160};
+8'd12, 8'd24, 8'd48, 8'd60, 8'd72, 8'd84, 8'd96, 8'd140, 8'd160};
 
 reg [71:0] test_green = {
-8'd0, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd140, 8'd160};
+8'd0, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd200, 8'd164};
 
 // Test Case expected outputs
 reg [MAX_OUTPUT_BIT:0] tb_expected_iGrid;
@@ -45,12 +45,10 @@ begin : CLK_GEN
 	#(CLK_PERIOD / 2);
 end
 
-initial begin
-tb_test_case = 0;
-tb_n_rst = 1;
-tb_pixelData = {test_red, test_blue,test_green};
-#(CLK_PERIOD);
 
+
+
+initial begin
 assign r0 = tb_pixelData[215:208];
 assign g0 = tb_pixelData[207:200];
 assign b0 = tb_pixelData[199:192];
@@ -79,15 +77,36 @@ assign r8 = tb_pixelData[23:16];
 assign g8 = tb_pixelData[15:8];
 assign b8 = tb_pixelData[7:0];
 
-I0 = tb_iGrid[71:64];
-I1 = tb_iGrid[63:56];
-I2 = tb_iGrid[55:48];
-I3 = tb_iGrid[47:40];
-I4 = tb_iGrid[39:32];
-I5 = tb_iGrid[31:24];
-I6 = tb_iGrid[23:16];
-I7 = tb_iGrid[15:8];
-I8 = tb_iGrid[7:0];
+assign I0 = tb_iGrid[71:64];
+assign I1 = tb_iGrid[63:56];
+assign I2 = tb_iGrid[55:48];
+assign I3 = tb_iGrid[47:40];
+assign I4 = tb_iGrid[39:32];
+assign I5 = tb_iGrid[31:24];
+assign I6 = tb_iGrid[23:16];
+assign I7 = tb_iGrid[15:8];
+assign I8 = tb_iGrid[7:0];
+
+
+//TEST 0
+tb_test_case = 0;
+tb_n_rst = 1;
+tb_pixelData <= {test_red, test_blue,test_green};
+#(CLK_PERIOD);
+#(CLK_PERIOD);
+
+//////////////////////TEST 1
+tb_test_case = 1;
+tb_n_rst = 1;
+tb_pixelData <= {test_blue, test_green, test_red};
+#(CLK_PERIOD);
+#(CLK_PERIOD);
+/////// TEST 2
+tb_test_case = 2;
+tb_n_rst = 1;
+tb_pixelData <= {test_green, test_blue, test_red};
+#(CLK_PERIOD);
+#(CLK_PERIOD);
 
 end
 
