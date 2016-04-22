@@ -23,14 +23,14 @@ reg [7:0] g0, g1, g2, g3 ,g4,g5,g6,g7,g8;
 reg [7:0] b0, b1, b2 ,b3 ,b4,b5,b6,b7,b8;
 reg [7:0] I0,I1, I2, I3, I4, I5, I6, I7, I8;
 reg [23:0] inp0;
-reg [71:0] test_red = {
-8'd20, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd140, 8'd160};
+reg [71:0] test_1 = {
+8'd20, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd144, 8'd160};
 
-reg [71:0] test_blue = {
-8'd12, 8'd24, 8'd48, 8'd60, 8'd72, 8'd84, 8'd96, 8'd140, 8'd160};
+reg [71:0] test_2 = {
+8'd12, 8'd24, 8'd48, 8'd60, 8'd72, 8'd84, 8'd96, 8'd155, 8'd189};
 
-reg [71:0] test_green = {
-8'd0, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd200, 8'd164};
+reg [71:0] test_3 = {
+8'd5, 8'd22, 8'd42, 8'd65, 8'd99, 8'd100, 8'd210, 8'd200, 8'd164};
 
 // Test Case expected outputs
 reg [MAX_OUTPUT_BIT:0] tb_expected_iGrid;
@@ -91,24 +91,42 @@ assign I8 = tb_iGrid[7:0];
 //TEST 0
 tb_test_case = 0;
 tb_n_rst = 1;
-tb_pixelData <= {test_red, test_blue,test_green};
+tb_pixelData <= {test_1, test_3,test_2};
 #(CLK_PERIOD);
-#(CLK_PERIOD);
+#(CLK_PERIOD*2);
 
 //////////////////////TEST 1
 tb_test_case = 1;
 tb_n_rst = 1;
-tb_pixelData <= {test_blue, test_green, test_red};
+tb_pixelData <= {test_3, test_2, test_1};
 #(CLK_PERIOD);
-#(CLK_PERIOD);
+#(CLK_PERIOD*2);
 /////// TEST 2
 tb_test_case = 2;
 tb_n_rst = 1;
-tb_pixelData <= {test_green, test_blue, test_red};
+tb_pixelData <= {test_2, test_3, test_1};
 #(CLK_PERIOD);
+#(CLK_PERIOD*2);
+//TEST 3
+tb_test_case = 3;
+tb_n_rst = 1;
+tb_pixelData <= {test_1, test_2,test_3};
 #(CLK_PERIOD);
+#(CLK_PERIOD * 2);
+
+//TEST 4
+tb_test_case = 4;
+tb_n_rst = 1;
+tb_pixelData <= {test_3, test_1, test_2};
+#(CLK_PERIOD);
+#(CLK_PERIOD*2);
+// TEST 5
+tb_test_case = 5;
+tb_n_rst = 1;
+tb_pixelData <= {test_2, test_1, test_3};
+#(CLK_PERIOD);
+#(CLK_PERIOD*2);
 
 end
-
 
 endmodule
