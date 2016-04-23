@@ -10,10 +10,9 @@
 
 module tb_edgedetect();
 	
-	parameter		INPUT_FILENAME		= "./docs/test_1.bmp";
-	parameter		RESULT1_FILENAME		= "./docs/filtered_1.bmp";
-	parameter		RESULT2_FILENAME		= "./docs/filtered_2.bmp";
-	parameter		RESULT3_FILENAME		= "./docs/filtered_3.bmp";
+	parameter		INPUT_FILENAME		= "./docs/test_2.bmp";
+	parameter		RESULT1_FILENAME		= "./docs/filtered_2.bmp";
+
 	
 	// Define file io offset constants
 	localparam SEEK_START	= 0;
