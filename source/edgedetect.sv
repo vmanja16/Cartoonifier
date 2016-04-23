@@ -1,6 +1,6 @@
 module edgedetect (
 	input	wire	      clk,
-	input	wire [72:0]	iGrid,
+	input	wire [71:0]	iGrid,
 	input wire [7:0]  iThreshold,
 	input wire        n_rst,
 	output reg        isEdge //0 if not edge, 1 if edge

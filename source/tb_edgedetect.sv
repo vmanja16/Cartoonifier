@@ -1,8 +1,8 @@
 // $Id: $
-// File name:   fir_filter.sv
-// Created:     9/23/2015
-// Author:      foo
-// Lab Section: 99
+// File name:   tb_edgedetect.sv
+// Created:     4/22/2016
+// Author:      Vikram Manja
+// Lab Section: 5
 // Version:     1.0  Initial Design Entry
 // Description: Course Staff Provided Image Processing Test bench
 
@@ -35,13 +35,15 @@ module tb_edgedetect();
 	
 	// Test bench dut port signals
 	reg tb_clk;
-	reg tb_n_reset;
+	reg tb_n_rst;
+	reg [71:0] tb_iGrid;
 	reg tb_data_ready;
-	reg tb_load_coeff;
+	reg [215:0] tb_pixelData;
+	reg [215:0] tb_input_frame;
+	reg [7:0] tb_threshold;	
 	reg [MAX_VAL_BIT:0] tb_sample_r;
 	reg [MAX_VAL_BIT:0] tb_sample_g;
 	reg [MAX_VAL_BIT:0] tb_sample_b;
-	reg [MAX_VAL_BIT:0] tb_coeff;
 	wire tb_one_k_samples_r;
 	wire tb_one_k_samples_g;
 	wire tb_one_k_samples_b;
@@ -88,14 +90,11 @@ module tb_edgedetect();
 	// 2-D Filter approach buffers
 	reg [2:0][7:0] tb_input_image [][];
 	reg [2:0][7:0] tb_row_pass_output [][];
-	reg [2:0][7:0] tb_col_pass_output [][];
-	reg [2:0][7:0] tb_merged_output [][];
-	reg [8:0] tb_temp_merge_sum;
 	
 	task reset_dut;
 	begin
 		// Activate the design's reset (does not need to be synchronize with clock)
-		tb_n_reset = 1'b0;
+		tb_n_rst = 1'b0;
 		
 		// Wait for a couple clock cycles
 		@(posedge tb_clk);
@@ -103,7 +102,7 @@ module tb_edgedetect();
 		
 		// Release the reset
 		@(negedge tb_clk);
-		tb_n_reset = 1;
+		tb_n_rst = 1;
 		
 		// Wait for a while before activating the design
 		@(posedge tb_clk);
@@ -120,88 +119,15 @@ module tb_edgedetect();
 		#(CLK_PERIOD / 2.0);
 	end
 	
-	// DUT portmap
-	edgedetect ED ( .clk(tb_clk), .n_rst(tb_n_rst), .iThreshold(), .iGrid(), .isEdge() )
-	
-	// Task for sending a signle coefficient
-	task send_coeff;
-		input [MAX_VAL_BIT:0] coeff;
-	begin
-		// Synchronize to a negative clock edge to avoid metastability
-		@(negedge tb_clk);
-		
-		// Start sending
-		tb_coeff = coeff;
-		tb_load_coeff = 1'b1;
-		
-		// Handle the handshake timing with a timeout 'thread'
-		fork : SCF
-		begin
-			// Have to just pulse the lc due to it going through a synchronizer
-			#(CLK_PERIOD * 1.25);
-			tb_load_coeff = 0;
-			// Wait for modwait to deassert -> signals done with current coeff
-			@(negedge tb_modwait_r); // All modwaits should be identical just use the red one
-			disable SCF;
-		end
-		begin
-			// Set a timeout incase design's modwait doesn't work
-			// Should only ever take a couple clock cycles given the synchronizer
-			#(10 * CLK_PERIOD);
-			$error("Module took too long to load coefficient");
-			disable SCF;
-		end
-		// Wait for 'threads' to finish
-		join
-	end
-  endtask
-	
-	// Task for loading a set of coefficients
-	task load_filter;
-		input [MAX_VAL_BIT:0] coeffs [3:0];
-	begin
-		send_coeff(coeffs[0]);
-		send_coeff(coeffs[1]);
-		send_coeff(coeffs[2]);
-		send_coeff(coeffs[3]);
-	end
-	endtask
-	
-	// Task for sending/handling a pixel
-	task send_frame;
-		// Test inputs
-		input [215:0] pixel;
-	begin
-		// Synchronize to a negative clock edge to avoid metastability
-		@(negedge tb_clk);
-		
-		// Start sending the new sample value
-		tb_sample_r = {'0, pixel[2]};
-		tb_sample_g = {'0, pixel[1]};
-		tb_sample_b = {'0, pixel[0]};
-		tb_data_ready = 1'b1;
-		
-		// Handle the handshake timing with a timeout 'thread'
-		fork : DL
-		begin
-			// Wait for the modwait to assert -> signals sample is being loaded
-			@(posedge tb_modwait_r);
-			tb_data_ready = 0;
-			// Wait for modwait to deassert -> signals done with current sample
-			@(negedge tb_modwait_r); // All modwaits should be identical just use the red one
-			disable DL;
-		end
-		begin
-			// Set a timeout incase design's modwait doesn't work
-			#(25 * CLK_PERIOD);
-			$error("Module took too long to process the sample");
-			disable DL;
-		end
-		// Wait for 'threads' to finish
-		join
-	end
-	endtask
-	
+	// DUT portmaps
+	edgedetect ED ( .clk(tb_clk), .n_rst(tb_n_rst), 
+                        .iThreshold(tb_threshold), 
+                        .iGrid(tb_iGrid), .isEdge(tb_isEdge) 
+			);	
+	intensity IN ( .clk(tb_clk), .n_rst(tb_n_rst), 
+                       .pixelData(tb_pixelData), 
+                       .iGrid(tb_iGrid) 
+			);
 	// Task for extracting the input file's header info
 	task read_input_header;
 	begin
@@ -339,7 +265,20 @@ module tb_edgedetect();
 			quiet_catch = $fseek(res_file, res_image_data_ptr, SEEK_START);
 	end
 	endtask
+	// Task for sending/handling a frame
+	task send_frame;
+		// Test inputs
+		input [215:0] pixelFrame;
+	begin
+		// Synchronize to a negative clock edge to avoid metastability
+		@(negedge tb_clk);
 	
+		tb_pixelData = pixelFrame; // send new frame to intensity
+		#(3 * CLK_PERIOD);         // wait for intensity & edge_detect
+		
+		
+	end
+	endtask
 	// Task for dumping an image buffer to the currently open result file
 	task dump_image_buffer_to_file;
 		input reg [2:0][7:0] image_buffer [][];
@@ -372,13 +311,8 @@ module tb_edgedetect();
 	initial
 	begin
 		// Initial values
-		tb_n_reset = 1'b1;
-		tb_data_ready = 1'b0;
-		tb_load_coeff = 1'b0;
-		tb_sample_r = 16'd0;
-		tb_sample_g = 16'd0;
-		tb_sample_b = 16'd0;
-		tb_coeff = COEFF0;
+		tb_n_rst = 1'b1;
+		tb_threshold = 8'd90;
 		
 		// Wait for some time before starting test cases
 		#(1ns);
@@ -389,35 +323,56 @@ module tb_edgedetect();
 		// Populate the input buffer and close up the input file
 		extract_input_image;
 		
-		// Handle the row dimensional 1-D pass
 		// Generate the output header for this pass' result file
 		generate_output_header(RESULT1_FILENAME);
 		
 		// Reset the filters
 		reset_dut;
 		
-		// Feed each pixel from the input image file through the DUT and store the result in the result image file
-		tb_row_pass_output = new[num_rows]; // WILL NEED TO ADD LOGIC TO AVOID processing out of bounds window
+		// Filter
+		tb_row_pass_output = new[num_rows]; 
+		// Set top and bottom rows
+		tb_row_pass_output[0] = tb_input_image[0];
+		tb_row_pass_output[num_rows-1] = tb_input_image[num_rows-1];
+		// Set first and last columns
 		for(r = 0; r < num_rows; r = r + 1)
 		begin
+			tb_row_pass_output[r][0] = tb_input_image[r][0];
+			tb_row_pass_output[r][num_cols-1] = tb_input_image[r][num_cols-1];
+		end
+		// Feed each pixel frame from the input image file through the DUT and store the result in the result image file
+		for(r = 1; r < num_rows-1; r = r + 1)
+		begin
 			tb_row_pass_output[r] = new[num_cols];
-			for(c = 0; c < num_cols; c = c + 1)
+		
+			for(c = 1; c < num_cols-1; c = c + 1)
 			begin
-				// Send the pixel to the filters
-				send_pixel(tb_input_image[r][c]);
+				// Send the frame to the filters
+				tb_input_frame = {tb_input_image[r-1][c-1], 
+						  tb_input_image[r-1][c], 
+						  tb_input_image[r-1][c+1],
+						  tb_input_image[r][c-1], 
+						  tb_input_image[r][c], 
+ 						  tb_input_image[r][c+1],
+						  tb_input_image[r+1][c-1], 
+						  tb_input_image[r+1][c], 
+ 						  tb_input_image[r+1][c+1]
+						};
+												
+					
+				send_frame(tb_input_frame);
 				
-				// filters should be done with the corresponding output pixel
 				// Capture the result pixel (B=LSB,R=MSB as per 24bpp form of 8.8.8.0.0 RGBAX format)
-				if (isedge == 1) begin
-				tb_row_pass_output[r][c][2] = tb_fir_out_r[7:0];
-				tb_row_pass_output[r][c][1] = tb_fir_out_g[7:0];
-				tb_row_pass_output[r][c][0] = tb_fir_out_b[7:0];
+				if (tb_isEdge == 1) begin
+				tb_row_pass_output[r][c][2] = 0;
+				tb_row_pass_output[r][c][1] = 0;
+				tb_row_pass_output[r][c][0] = 0;
 				end
 				else begin
 				tb_row_pass_output[r][c][2] = tb_input_image[r][c][2];
 				tb_row_pass_output[r][c][1] = tb_input_image[r][c][1];
 				tb_row_pass_output[r][c][0] = tb_input_image[r][c][0];
-				
+				end
 				
 				// Add some spacing between pixel frames
 				#(5 * CLK_PERIOD);
@@ -428,12 +383,6 @@ module tb_edgedetect();
 		// Populate the image data from the first pass into it's result file
 		dump_image_buffer_to_file(tb_row_pass_output);
 		
-		// Column Dimension 1-D pass to complete a 2-D filter of the image
-		// Generate the output header for this pass' result file
-		generate_output_header(RESULT2_FILENAME);
-		
-		// Reset the filters
-		reset_dut;
 	end
 	
 	
