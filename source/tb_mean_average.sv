@@ -1,17 +1,16 @@
 // $Id: $
-// File name:   tb_edgedetect.sv
-// Created:     4/22/2016
+// File name:   tb_mean_average.sv
+// Created:     4/23/2016
 // Author:      Vikram Manja
-// Lab Section: 5
+// Lab Section: 337-05
 // Version:     1.0  Initial Design Entry
-// Description: Course Staff Provided Image Processing Test bench
-
+// Description: A testbench for the mean averager.
 `timescale 1ns / 100ps
 
 module tb_edgedetect();
 	
-	parameter		INPUT_FILENAME		= "./docs/test_4.bmp";
-	parameter		RESULT1_FILENAME		= "./docs/filtered_4.bmp";
+	parameter		INPUT_FILENAME		= "./docs/test_2.bmp";
+	parameter		RESULT1_FILENAME		= "./docs/filtered_2.bmp";
 
 	
 	// Define file io offset constants
@@ -296,7 +295,7 @@ module tb_edgedetect();
 	begin
 		// Initial values
 		tb_n_rst = 1'b1;
-		tb_threshold = 8'd50;
+		tb_threshold = 8'd90;
 		
 		// Wait for some time before starting test cases
 		#(1ns);

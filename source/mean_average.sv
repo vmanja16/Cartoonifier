@@ -14,7 +14,7 @@ wire [7:0] r0,r1,r2,r3,r5,r6,r7,r8,b0,b1,b2,b3,b5,b6,b7,b8,g0,g1,g2,g3,g5,g6,g7,
 reg [7:0] r01,r23,r56,r78,g01,g23,g56,g78,b01,b23,b56,b78, r0123, r5678, b0123, b5678, g0123, g5678;
 
 // TODO: on Enable (x clock cycles to process 1 3x3 frame): write f_pixel and shift in new pixelData
-// readBuffer has 576 bits, first frame is {pD[X:X-71], pD[X-72:575-72-71] pD[X-72-72:X-72-72-71]} and then we'll need to decrement X by 24
+
 
 always_ff @ (posedge clk) begin
   if (n_rst == 0) begin 

@@ -30,11 +30,12 @@ module edgedetect (
 	assign top =   intensity[0] + (intensity[1]<<1) + intensity[2];
 	assign btm =   intensity[6] + (intensity[7]<<1) + intensity[8];
 	
-   assign sum1 = right - left;
+	assign sum1 = right - left;
 	assign sum2 = left  - right;
-   assign sum3 = top   - btm;
-   assign sum4 = btm   - top;
-   assign nxt_isedge = (( (sum1[7]==0) && (sum1 > iThreshold)) || 
+	assign sum3 = top   - btm;
+	assign sum4 = btm   - top;
+	
+	assign nxt_isedge = (( (sum1[7]==0) && (sum1 > iThreshold)) || 
                        ( (sum2[7]==0) && (sum2 > iThreshold)) ||
                        ( (sum3[7]==0) && (sum3 > iThreshold)) ||
                        ( (sum4[7]==0) && (sum4 > iThreshold)) );
