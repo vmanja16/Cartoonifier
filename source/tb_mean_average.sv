@@ -8,10 +8,10 @@
 
 `timescale 1ns / 100ps
 
-module tb_edgedetect();
+module tb_mean_average();
 	
-	parameter		INPUT_FILENAME		= "./docs/test_4.bmp";
-	parameter		RESULT1_FILENAME		= "./docs/filtered_4.bmp";
+	parameter		INPUT_FILENAME		= "./docs/test_2.bmp";
+	parameter		RESULT1_FILENAME		= "./docs/filtered_2.bmp";
 
 	
 	// Define file io offset constants
@@ -43,6 +43,9 @@ module tb_edgedetect();
 	reg tb_isEdge;
 	reg tb_intensity_enable;	
 	reg tb_edgedetect_enable;
+	reg tb_mean_average_enable;
+	reg [23:0] tb_f_pixel;
+	reg tb_pixel_done;
 	
 	// Declare Image Processing Test Bench Variables
 	integer r;										// Loop variable for working with rows of pixels
@@ -110,12 +113,18 @@ module tb_edgedetect();
 	edgedetect ED ( .clk(tb_clk), .n_rst(tb_n_rst), 
                         .iThreshold(tb_threshold), 
                         .iGrid(tb_iGrid), .isEdge(tb_isEdge),
-			.edgedetect_enable(tb_edgedetect_enable) 
+			.edgedetect_enable(tb_edgedetect_enable),
+			.mean_average_enable(tb_mean_average_enable) 
 			);	
 	intensity IN ( .clk(tb_clk), .n_rst(tb_n_rst), 
                        .pixelData(tb_pixelData), 
                        .iGrid(tb_iGrid), .intensity_enable(tb_intensity_enable),
-		       .edgedetect_enable(tb_edgedtect_enable) 
+		       .edgedetect_enable(tb_edgedetect_enable)
+			);
+	mean_average M (.clk(tb_clk), .n_rst(tb_n_rst),
+			.pixelData(tb_pixelData), .isEdge(tb_isEdge),
+			.mean_average_enable(tb_mean_average_enable),
+			.f_pixel(tb_f_pixel), .pixel_done(tb_pixel_done)
 			);
 	// Task for extracting the input file's header info
 	task read_input_header;
@@ -301,8 +310,8 @@ module tb_edgedetect();
 	begin
 		// Initial values
 		tb_n_rst = 1'b1;
-		tb_threshold = 8'd50;
-		tb_intensity_enable = 1;
+		tb_threshold = 8'd65;
+		tb_intensity_enable = 0;
 		
 		// Wait for some time before starting test cases
 		#(1ns);
@@ -351,8 +360,16 @@ module tb_edgedetect();
 												
 					
 				send_frame(tb_input_frame);
-				
+				#(CLK_PERIOD);
+				tb_intensity_enable <= 1;
+				@ (posedge tb_clk);
+				tb_intensity_enable <= 0;
+				@ (posedge tb_clk);
+				#(6 * CLK_PERIOD);
+
 				// Capture the result pixel (B=LSB,R=MSB as per 24bpp form of 8.8.8.0.0 RGBAX format)
+				tb_row_pass_output[r][c] = tb_f_pixel;
+				/*
 				if (tb_isEdge == 1) begin
 				tb_row_pass_output[r][c][2] = 0;
 				tb_row_pass_output[r][c][1] = 0;
@@ -363,9 +380,9 @@ module tb_edgedetect();
 				tb_row_pass_output[r][c][1] = tb_input_image[r][c][1];
 				tb_row_pass_output[r][c][0] = tb_input_image[r][c][0];
 				end
-				
+				*/
 				// Add some spacing between pixel frames
-				#(5 * CLK_PERIOD);
+				#(2 * CLK_PERIOD);
 			end
 			// Finished a row of pixels
 		end

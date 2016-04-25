@@ -46,14 +46,12 @@ always_comb begin
     else begin
       if (f_pixel == 0) nxt_f_pixel = rgb_avg;
       else begin nxt_f_pixel = {
-	   ( (nxt_f_pixel[23:16]>>1) + (rgb_avg[23:16]>>1) ), // avg red
-	   ( (nxt_f_pixel[15:8] >>1) + (rgb_avg[15:8]>>1)  ), // avg green
-	   ( (nxt_f_pixel[7:0]  >>1) + (rgb_avg[7:0]>>1)   )};  // avg blue
+	   ( (f_pixel[23:16]>>1) + (rgb_avg[23:16]>>1) ), // avg red
+	   ( (f_pixel[15:8] >>1) + (rgb_avg[15:8]>>1)  ), // avg green
+	   ( (f_pixel[7:0]  >>1) + (rgb_avg[7:0]>>1)   )};  // avg blue
       end
+    end
   end
-end
-
-
 end
 // Calculate nxt_rgb_avg
 always_comb begin 
@@ -62,10 +60,10 @@ end
 // Calculate nxt_r_avg
 always_comb begin
   nxt_r_avg = r_avg;
-	r01 = r0>>3 + r1>>3;	
-	r23 = r2>>3 + r3>>3;
-	r56 = r5>>3 + r6>>3;
-	r78 = r7>>3 + r8>>3;
+	r01 = (r0>>3) + (r1>>3);	
+	r23 = (r2>>3) + (r3>>3);
+	r56 = (r5>>3) + (r6>>3);
+	r78 = (r7>>3) + (r8>>3);
 	r0123 = r01+r23;
 	r5678 = r56+r78;
 	nxt_r_avg = r0123+r5678;  
@@ -73,10 +71,10 @@ end
 // Calculate nxt_g_avg
 always_comb begin
   nxt_g_avg = g_avg;
-	g01   = g0>>3 + g1>>3;	
-	g23   = g2>>3 + g3>>3;
-	g56   = g5>>3 + g6>>3;
-	g78   = g7>>3 + g8>>3;
+	g01   = (g0>>3) + (g1>>3);	
+	g23   = (g2>>3) + (g3>>3);
+	g56   = (g5>>3) + (g6>>3);
+	g78   = (g7>>3) + (g8>>3);
 	g0123 = g01+g23;
 	g5678 = g56+g78;
 	nxt_g_avg = g0123+g5678;
@@ -84,10 +82,10 @@ end
 // Calculate nxt_b_avg
 always_comb begin
    nxt_b_avg = b_avg;
-	b01   = b0>>3 + b1>>3;	
-	b23   = b2>>3 + b3>>3;
-	b56   = b5>>3 + b6>>3;
-	b78   = b7>>3 + b8>>3;
+	b01   = (b0>>3) + (b1>>3);	
+	b23   = (b2>>3) + (b3>>3);
+	b56   = (b5>>3) + (b6>>3);
+	b78   = (b7>>3) + (b8>>3);
 	b0123 = b01+b23;
 	b5678 = b56+b78;
 	nxt_b_avg = b0123+b5678;
