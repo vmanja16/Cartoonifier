@@ -2,6 +2,8 @@ module mean_average (
 input wire         clk,
 input wire         n_rst,
 input wire         isEdge,
+input wire	   mean_average_enable,
+output reg	   pixel_done,
 input wire [215:0] pixelData,
 output reg [23:0]  f_pixel
 );
@@ -18,33 +20,38 @@ reg [7:0] r01,r23,r56,r78,g01,g23,g56,g78,b01,b23,b56,b78, r0123, r5678, b0123, 
 
 always_ff @ (posedge clk) begin
   if (n_rst == 0) begin 
-    r_avg   <= 0;
-    g_avg   <= 0;
-    b_avg   <= 0;
-    rgb_avg <= 0;
-    f_pixel <= 0;
+    r_avg      <= 0;
+    g_avg      <= 0;
+    b_avg      <= 0;
+    rgb_avg    <= 0;
+    f_pixel    <= 0;
+    pixel_done <= 0;
   end
   else begin
-    r_avg   <= nxt_r_avg;
-    g_avg   <= nxt_g_avg;
-    b_avg   <= nxt_b_avg;
-    rgb_avg <= nxt_rgb_avg;
-    f_pixel <= nxt_f_pixel;
-  end
+    r_avg      <= nxt_r_avg;
+    g_avg      <= nxt_g_avg;
+    b_avg      <= nxt_b_avg;
+    rgb_avg    <= nxt_rgb_avg;
+    f_pixel    <= nxt_f_pixel;
+    pixel_done <= mean_average_enable;
+    end
 end
 
 
 // Calculate nxt_f_pixel
 always_comb begin
-  if (isEdge) nxt_f_pixel = 0; // turn pixel black on edge
-  else begin
-    if (f_pixel == 0) nxt_f_pixel = rgb_avg;
-	 else begin nxt_f_pixel = {
+  nxt_f_pixel = f_pixel;
+  if (mean_average_enable) begin  
+    if (isEdge) nxt_f_pixel = 0; // turn pixel black on edge
+    else begin
+      if (f_pixel == 0) nxt_f_pixel = rgb_avg;
+      else begin nxt_f_pixel = {
 	   ( (nxt_f_pixel[23:16]>>1) + (rgb_avg[23:16]>>1) ), // avg red
 	   ( (nxt_f_pixel[15:8] >>1) + (rgb_avg[15:8]>>1)  ), // avg green
 	   ( (nxt_f_pixel[7:0]  >>1) + (rgb_avg[7:0]>>1)   )};  // avg blue
-	 end
+      end
   end
+end
 
 
 end

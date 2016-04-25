@@ -2,14 +2,22 @@ module intensity
 (
 	input wire clk, //CLK
 	input wire n_rst,
+	input wire intensity_enable,
 	input wire [215:0] pixelData,
-	output reg [71:0] iGrid // Intensity Output
+	output reg [71:0] iGrid, // Intensity Output
+	output reg edgedetect_enable
 );
 wire [7:0] i0, i1, i2, i3, i4, i5, i6, i7, i8;
-reg [71:0] next_grid;
+reg [71:0] nxt_iGrid;
+reg nxt_edgedetect_enable;
+
 always @(posedge clk) begin
   if (n_rst==0) iGrid <= 0;
-  else iGrid <= next_grid;
+  else          iGrid <= nxt_iGrid;
+end
+always @(posedge clk) begin
+  if (n_rst==0) edgedetect_enable <= 0;
+  else edgedetect_enable <= nxt_edgedetect_enable;
 end
 
 icomb IN0 ( .rgb(pixelData[215:192]), .oIntensity(i0) );
@@ -23,7 +31,10 @@ icomb IN7 ( .rgb(pixelData[47:24]),   .oIntensity(i7) );
 icomb IN8 ( .rgb(pixelData[23:0]),    .oIntensity(i8) );
 
 always_comb begin
-  next_grid = {i0, i1, i2, i3, i4, i5, i6, i7, i8};
+  nxt_iGrid = {i0, i1, i2, i3, i4, i5, i6, i7, i8};
+  nxt_edgedetect_enable = 0;
+  if (intensity_enable) nxt_edgedetect_enable = 1;	
 end
+
 	
 endmodule

@@ -1,16 +1,17 @@
 // $Id: $
-// File name:   tb_mean_average.sv
-// Created:     4/23/2016
+// File name:   tb_edgedetect.sv
+// Created:     4/22/2016
 // Author:      Vikram Manja
-// Lab Section: 337-05
+// Lab Section: 5
 // Version:     1.0  Initial Design Entry
-// Description: A testbench for the mean averager.
+// Description: Course Staff Provided Image Processing Test bench
+
 `timescale 1ns / 100ps
 
 module tb_edgedetect();
 	
-	parameter		INPUT_FILENAME		= "./docs/test_2.bmp";
-	parameter		RESULT1_FILENAME		= "./docs/filtered_2.bmp";
+	parameter		INPUT_FILENAME		= "./docs/test_4.bmp";
+	parameter		RESULT1_FILENAME		= "./docs/filtered_4.bmp";
 
 	
 	// Define file io offset constants
@@ -38,7 +39,10 @@ module tb_edgedetect();
 	reg tb_data_ready;
 	reg [215:0] tb_pixelData;
 	reg [215:0] tb_input_frame;
-	reg [7:0] tb_threshold;	
+	reg [7:0] tb_threshold;
+	reg tb_isEdge;
+	reg tb_intensity_enable;	
+	reg tb_edgedetect_enable;
 	
 	// Declare Image Processing Test Bench Variables
 	integer r;										// Loop variable for working with rows of pixels
@@ -105,11 +109,13 @@ module tb_edgedetect();
 	// DUT portmaps
 	edgedetect ED ( .clk(tb_clk), .n_rst(tb_n_rst), 
                         .iThreshold(tb_threshold), 
-                        .iGrid(tb_iGrid), .isEdge(tb_isEdge) 
+                        .iGrid(tb_iGrid), .isEdge(tb_isEdge),
+			.edgedetect_enable(tb_edgedetect_enable) 
 			);	
 	intensity IN ( .clk(tb_clk), .n_rst(tb_n_rst), 
                        .pixelData(tb_pixelData), 
-                       .iGrid(tb_iGrid) 
+                       .iGrid(tb_iGrid), .intensity_enable(tb_intensity_enable),
+		       .edgedetect_enable(tb_edgedtect_enable) 
 			);
 	// Task for extracting the input file's header info
 	task read_input_header;
@@ -295,7 +301,8 @@ module tb_edgedetect();
 	begin
 		// Initial values
 		tb_n_rst = 1'b1;
-		tb_threshold = 8'd90;
+		tb_threshold = 8'd50;
+		tb_intensity_enable = 1;
 		
 		// Wait for some time before starting test cases
 		#(1ns);

@@ -39,7 +39,10 @@ module tb_edgedetect();
 	reg tb_data_ready;
 	reg [215:0] tb_pixelData;
 	reg [215:0] tb_input_frame;
-	reg [7:0] tb_threshold;	
+	reg [7:0] tb_threshold;
+	reg tb_isEdge;
+	reg tb_intensity_enable;	
+	reg tb_edgedetect_enable;
 	
 	// Declare Image Processing Test Bench Variables
 	integer r;										// Loop variable for working with rows of pixels
@@ -106,11 +109,13 @@ module tb_edgedetect();
 	// DUT portmaps
 	edgedetect ED ( .clk(tb_clk), .n_rst(tb_n_rst), 
                         .iThreshold(tb_threshold), 
-                        .iGrid(tb_iGrid), .isEdge(tb_isEdge) 
+                        .iGrid(tb_iGrid), .isEdge(tb_isEdge),
+			.edgedetect_enable(tb_edgedetect_enable) 
 			);	
 	intensity IN ( .clk(tb_clk), .n_rst(tb_n_rst), 
                        .pixelData(tb_pixelData), 
-                       .iGrid(tb_iGrid) 
+                       .iGrid(tb_iGrid), .intensity_enable(tb_intensity_enable),
+		       .edgedetect_enable(tb_edgedtect_enable) 
 			);
 	// Task for extracting the input file's header info
 	task read_input_header;
@@ -297,6 +302,7 @@ module tb_edgedetect();
 		// Initial values
 		tb_n_rst = 1'b1;
 		tb_threshold = 8'd50;
+		tb_intensity_enable = 1;
 		
 		// Wait for some time before starting test cases
 		#(1ns);
