@@ -10,8 +10,8 @@
 
 module tb_mean_average();
 	
-	parameter		INPUT_FILENAME		= "./docs/test_2.bmp";
-	parameter		RESULT1_FILENAME		= "./docs/filtered_2.bmp";
+	parameter		INPUT_FILENAME		= "./docs/test_7.bmp";
+	parameter		RESULT1_FILENAME		= "./docs/filtered_7.bmp";
 
 	
 	// Define file io offset constants
@@ -310,7 +310,7 @@ module tb_mean_average();
 	begin
 		// Initial values
 		tb_n_rst = 1'b1;
-		tb_threshold = 8'd65;
+		tb_threshold = 8'd80;
 		tb_intensity_enable = 0;
 		
 		// Wait for some time before starting test cases

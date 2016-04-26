@@ -42,7 +42,7 @@ end
 always_comb begin
   nxt_f_pixel = f_pixel;
   if (mean_average_enable) begin  
-    if (isEdge) nxt_f_pixel = 0; // turn pixel black on edge
+    if (isEdge) nxt_f_pixel = {8'd20, 8'd20, 8'd20}; // turn pixel black on edge
     else begin
       if (f_pixel == 0) nxt_f_pixel = rgb_avg;
       else begin nxt_f_pixel = {
