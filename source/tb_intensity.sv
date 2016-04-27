@@ -12,6 +12,8 @@ parameter MAX_INPUT_BIT = 215;
 reg tb_clk;
 reg tb_n_rst;
 reg [MAX_INPUT_BIT:0] tb_pixelData;
+reg tb_intensity_enable;
+reg tb_edgedetect_enable;
 
 // DUT outputs
 wire [MAX_OUTPUT_BIT:0] tb_iGrid;
@@ -22,7 +24,7 @@ reg [7:0] r0, r1, r2, r3, r4,r5,r6,r7,r8;
 reg [7:0] g0, g1, g2, g3 ,g4,g5,g6,g7,g8;
 reg [7:0] b0, b1, b2 ,b3 ,b4,b5,b6,b7,b8;
 reg [7:0] I0,I1, I2, I3, I4, I5, I6, I7, I8;
-reg [23:0] inp0;
+
 reg [71:0] test_1 = {
 8'd20, 8'd20, 8'd40, 8'd60, 8'd80, 8'd100, 8'd120, 8'd144, 8'd160};
 
@@ -35,7 +37,7 @@ reg [71:0] test_3 = {
 // Test Case expected outputs
 reg [MAX_OUTPUT_BIT:0] tb_expected_iGrid;
 
-intensity DUT ( .clk(tb_clk), .n_rst(tb_n_rst), .pixelData(tb_pixelData), .iGrid(tb_iGrid) );
+intensity DUT ( .clk(tb_clk), .n_rst(tb_n_rst), .pixelData(tb_pixelData), .iGrid(tb_iGrid) .intensity_enable(tb_intensity_enable) .edgedetect_enable(tb_edgedetect_enable) );
 
 always
 begin : CLK_GEN
@@ -91,25 +93,41 @@ assign I8 = tb_iGrid[7:0];
 //TEST 0
 tb_test_case = 0;
 tb_n_rst = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 0;
 tb_pixelData <= {test_1, test_3,test_2};
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 
-//////////////////////TEST 1
+////////TEST 1
 tb_test_case = 1;
 tb_n_rst = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 0;
 tb_pixelData <= {test_3, test_2, test_1};
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 /////// TEST 2
 tb_test_case = 2;
 tb_n_rst = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 0;
 tb_pixelData <= {test_2, test_3, test_1};
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 //TEST 3
 tb_test_case = 3;
 tb_n_rst = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 0;
 tb_pixelData <= {test_1, test_2,test_3};
 #(CLK_PERIOD);
 #(CLK_PERIOD * 2);
@@ -117,12 +135,20 @@ tb_pixelData <= {test_1, test_2,test_3};
 //TEST 4
 tb_test_case = 4;
 tb_n_rst = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 0;
 tb_pixelData <= {test_3, test_1, test_2};
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 // TEST 5
 tb_test_case = 5;
 tb_n_rst = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 1;
+@(posedge tb_clk);
+tb_intensity_enable = 0;
 tb_pixelData <= {test_2, test_1, test_3};
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
