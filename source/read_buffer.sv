@@ -35,7 +35,8 @@ always_ff@(posedge clk, negedge n_rst)
 begin
 	if (1'b0 == n_rst)
 	begin
-		
+		filter_const <= 0;
+		reset_filter_const <= 0;
 	end
 	else if (master_readdatavalid)
 	begin
@@ -112,7 +113,7 @@ flex_counter #(4) count_load
 	.clk(clk),
 	.n_rst(n_rst),
 	.clear(done_load),
-	.count_enable((load_read_buffer || shift_enable24) && master_readdatavalid)),
+	.count_enable((load_read_buffer || shift_enable24) && master_readdatavalid),
 	.rollover_val(4'd8),
 	.rollover_flag(done_load_read_buffer)
 );
@@ -122,7 +123,7 @@ flex_counter #(3) current_filter
 	.clk(clk),
 	.n_rst(n_rst),
 	.clear(reset_filter_const),
-	.count_enable((pixel_done),
+	.count_enable(pixel_done),
 	.rollover_val(4'd6),
 	.rollover_flag(reset_filter_const),
 	.count_out(filter_const)
