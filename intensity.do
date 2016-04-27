@@ -3,6 +3,8 @@ quietly WaveActivateNextPane {} 0
 add wave -noupdate -radix decimal /tb_intensity/tb_clk
 add wave -noupdate -radix decimal /tb_intensity/tb_n_rst
 add wave -noupdate -radix decimal /tb_intensity/tb_pixelData
+add wave -noupdate -radix decimal /tb_intensity/tb_intensity_enable
+add wave -noupdate -radix decimal /tb_intensity/tb_edgedetect_enable
 add wave -noupdate -radix decimal /tb_intensity/tb_iGrid
 add wave -noupdate -radix decimal /tb_intensity/tb_test_case
 add wave -noupdate -radix decimal /tb_intensity/r0
@@ -41,8 +43,9 @@ add wave -noupdate -radix decimal /tb_intensity/r8
 add wave -noupdate -radix decimal /tb_intensity/g8
 add wave -noupdate -radix decimal /tb_intensity/b8
 add wave -noupdate -radix decimal /tb_intensity/I8
+add wave -noupdate -radix decimal /tb_intensity/tb_expected_iGrid
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {23333 ps} 0} {{Cursor 2} {99219 ps} 0}
+WaveRestoreCursors {{Cursor 1} {8277 ps} 0} {{Cursor 2} {99219 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100

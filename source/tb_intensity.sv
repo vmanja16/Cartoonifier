@@ -37,7 +37,7 @@ reg [71:0] test_3 = {
 // Test Case expected outputs
 reg [MAX_OUTPUT_BIT:0] tb_expected_iGrid;
 
-intensity DUT ( .clk(tb_clk), .n_rst(tb_n_rst), .pixelData(tb_pixelData), .iGrid(tb_iGrid) .intensity_enable(tb_intensity_enable) .edgedetect_enable(tb_edgedetect_enable) );
+intensity DUT ( .clk(tb_clk), .n_rst(tb_n_rst), .pixelData(tb_pixelData), .iGrid(tb_iGrid), .intensity_enable(tb_intensity_enable), .edgedetect_enable(tb_edgedetect_enable) );
 
 always
 begin : CLK_GEN
@@ -89,26 +89,32 @@ assign I6 = tb_iGrid[23:16];
 assign I7 = tb_iGrid[15:8];
 assign I8 = tb_iGrid[7:0];
 
-
-//TEST 0
+tb_n_rst = 0;
+@(posedge tb_clk);
+tb_n_rst=1;
 tb_test_case = 0;
 tb_n_rst = 1;
+tb_intensity_enable = 0;
+tb_pixelData = 0;
+
+//TEST 0
 @(posedge tb_clk);
+tb_test_case = 1;
+tb_n_rst = 1;
 tb_intensity_enable = 1;
+tb_pixelData <= {test_1, test_3,test_2};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
-tb_pixelData <= {test_1, test_3,test_2};
-#(CLK_PERIOD);
-#(CLK_PERIOD*2);
-
+@(posedge tb_clk);
+@(posedge tb_clk);
 ////////TEST 1
 tb_test_case = 1;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
+tb_pixelData <= {test_3, test_2, test_1};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
-tb_pixelData <= {test_3, test_2, test_1};
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 /////// TEST 2
@@ -126,9 +132,9 @@ tb_test_case = 3;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
+tb_pixelData <= {test_1, test_2,test_3};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
-tb_pixelData <= {test_1, test_2,test_3};
 #(CLK_PERIOD);
 #(CLK_PERIOD * 2);
 
@@ -137,9 +143,10 @@ tb_test_case = 4;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
+tb_pixelData <= {test_3, test_1, test_2};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
-tb_pixelData <= {test_3, test_1, test_2};
+
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 // TEST 5
@@ -147,9 +154,10 @@ tb_test_case = 5;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
+tb_pixelData <= {test_2, test_1, test_3};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
-tb_pixelData <= {test_2, test_1, test_3};
+
 #(CLK_PERIOD);
 #(CLK_PERIOD*2);
 
