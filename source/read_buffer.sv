@@ -13,8 +13,9 @@ input logic n_rst,
 input logic shift_enable8,
 input logic shift_enable24,
 input logic load_read_buffer,
-input logic [23:0] master_readdata,
+input logic [31:0] master_readdata,
 input logic master_readdatavalid,
+input logic pixel_done,
 output logic [215:0] pixelData,
 output logic done_read8,
 output logic done_read24,
@@ -25,9 +26,10 @@ reg [191:0] line1;
 reg [191:0] line2;
 reg [191:0] line3;
 reg [191:0] buffer;
+reg filter_const, reset_filter_const;
 genvar i;
 
-assign pixelData = {line1[71:0], line2[71:0], line3[71:0]};
+assign pixelData = {line1[71*filter_const-:71], line2[71*filter_const-:71], line3[71*filter_const-:71]};
 
 always_ff@(posedge clk, negedge n_rst)
 begin
@@ -39,12 +41,12 @@ begin
 	begin
 		if (shift_enable24)
 		begin
-			line1[23:0] <= master_readdata;
+			line1[23:0] <= master_readdata[23:0];
 			line2[23:0] <= line1[191:167];
 			line3[23:0] <= line2[191:167];
 		end
 		if (load_read_buffer)
-			buffer[23:0] <= master_readdata;
+			buffer[23:0] <= master_readdata[23:0];
 	end
 	else if (shift_enable8)
 	begin
@@ -84,7 +86,8 @@ generate
 	end
 endgenerate
 
-flex_counter #(5) count_24
+
+flex_counter #(2) count_24
 (
 	.clk(clk),
 	.n_rst(n_rst),
@@ -112,6 +115,17 @@ flex_counter #(4) count_load
 	.count_enable((load_read_buffer || shift_enable24) && master_readdatavalid)),
 	.rollover_val(4'd8),
 	.rollover_flag(done_load_read_buffer)
+);
+
+flex_counter #(3) current_filter
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(reset_filter_const),
+	.count_enable((pixel_done),
+	.rollover_val(4'd6),
+	.rollover_flag(reset_filter_const),
+	.count_out(filter_const)
 );
 
 endmodule

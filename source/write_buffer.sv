@@ -12,7 +12,7 @@ input logic clk,
 input logic n_rst,
 input logic [23:0] pixel_data,
 input logic pixel_done,
-input logic master_writeresponsevalid,
+input logic master_waitrequest,
 input logic shift_enable_write,
 output logic [23:0] master_writedata,
 output logic master_address,
@@ -41,7 +41,7 @@ begin
 			else
 				buffer2[23:0] <= pixel_data;
 		end
-		else if (master_writeresponsevalid)
+		else if (!master_waitrequest)
 		begin
 			if (buffer_enable)
 				buffer1[23:0] <= 0;
@@ -69,7 +69,7 @@ generate
 				else
 					buffer1[i+24-:23] <= buffer1[i-:23];
 			end
-			else if (master_writeresponsevalid)
+			else if (!master_waitrequest)
 			begin
 				if (buffer_enable)
 					buffer1[i+24-:23] <= buffer1[i-:23];
