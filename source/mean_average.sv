@@ -2,6 +2,8 @@ module mean_average (
 input wire         clk,
 input wire         n_rst,
 input wire         isEdge,
+input wire	   mean_average_enable,
+output reg	   pixel_done,
 input wire [215:0] pixelData,
 output reg [23:0]  f_pixel
 );
@@ -14,39 +16,42 @@ wire [7:0] r0,r1,r2,r3,r5,r6,r7,r8,b0,b1,b2,b3,b5,b6,b7,b8,g0,g1,g2,g3,g5,g6,g7,
 reg [7:0] r01,r23,r56,r78,g01,g23,g56,g78,b01,b23,b56,b78, r0123, r5678, b0123, b5678, g0123, g5678;
 
 // TODO: on Enable (x clock cycles to process 1 3x3 frame): write f_pixel and shift in new pixelData
-// readBuffer has 576 bits, first frame is {pD[X:X-71], pD[X-72:575-72-71] pD[X-72-72:X-72-72-71]} and then we'll need to decrement X by 24
+
 
 always_ff @ (posedge clk) begin
   if (n_rst == 0) begin 
-    r_avg   <= 0;
-    g_avg   <= 0;
-    b_avg   <= 0;
-    rgb_avg <= 0;
-    f_pixel <= 0;
+    r_avg      <= 0;
+    g_avg      <= 0;
+    b_avg      <= 0;
+    rgb_avg    <= 0;
+    f_pixel    <= 0;
+    pixel_done <= 0;
   end
   else begin
-    r_avg   <= nxt_r_avg;
-    g_avg   <= nxt_g_avg;
-    b_avg   <= nxt_b_avg;
-    rgb_avg <= nxt_rgb_avg;
-    f_pixel <= nxt_f_pixel;
-  end
+    r_avg      <= nxt_r_avg;
+    g_avg      <= nxt_g_avg;
+    b_avg      <= nxt_b_avg;
+    rgb_avg    <= nxt_rgb_avg;
+    f_pixel    <= nxt_f_pixel;
+    pixel_done <= mean_average_enable;
+    end
 end
 
 
 // Calculate nxt_f_pixel
 always_comb begin
-  if (isEdge) nxt_f_pixel = 0; // turn pixel black on edge
-  else begin
-    if (f_pixel == 0) nxt_f_pixel = rgb_avg;
-	 else begin nxt_f_pixel = {
-	   ( (nxt_f_pixel[23:16]>>1) + (rgb_avg[23:16]>>1) ), // avg red
-	   ( (nxt_f_pixel[15:8] >>1) + (rgb_avg[15:8]>>1)  ), // avg green
-	   ( (nxt_f_pixel[7:0]  >>1) + (rgb_avg[7:0]>>1)   )};  // avg blue
-	 end
+  nxt_f_pixel = f_pixel;
+  if (mean_average_enable) begin  
+    if (isEdge) nxt_f_pixel = {8'd20, 8'd20, 8'd20}; // turn pixel black on edge
+    else begin
+      if (f_pixel == 0) nxt_f_pixel = rgb_avg;
+      else begin nxt_f_pixel = {
+	   ( (f_pixel[23:16]>>1) + (rgb_avg[23:16]>>1) ), // avg red
+	   ( (f_pixel[15:8] >>1) + (rgb_avg[15:8]>>1)  ), // avg green
+	   ( (f_pixel[7:0]  >>1) + (rgb_avg[7:0]>>1)   )};  // avg blue
+      end
+    end
   end
-
-
 end
 // Calculate nxt_rgb_avg
 always_comb begin 
@@ -55,10 +60,10 @@ end
 // Calculate nxt_r_avg
 always_comb begin
   nxt_r_avg = r_avg;
-	r01 = r0>>3 + r1>>3;	
-	r23 = r2>>3 + r3>>3;
-	r56 = r5>>3 + r6>>3;
-	r78 = r7>>3 + r8>>3;
+	r01 = (r0>>3) + (r1>>3);	
+	r23 = (r2>>3) + (r3>>3);
+	r56 = (r5>>3) + (r6>>3);
+	r78 = (r7>>3) + (r8>>3);
 	r0123 = r01+r23;
 	r5678 = r56+r78;
 	nxt_r_avg = r0123+r5678;  
@@ -66,10 +71,10 @@ end
 // Calculate nxt_g_avg
 always_comb begin
   nxt_g_avg = g_avg;
-	g01   = g0>>3 + g1>>3;	
-	g23   = g2>>3 + g3>>3;
-	g56   = g5>>3 + g6>>3;
-	g78   = g7>>3 + g8>>3;
+	g01   = (g0>>3) + (g1>>3);	
+	g23   = (g2>>3) + (g3>>3);
+	g56   = (g5>>3) + (g6>>3);
+	g78   = (g7>>3) + (g8>>3);
 	g0123 = g01+g23;
 	g5678 = g56+g78;
 	nxt_g_avg = g0123+g5678;
@@ -77,10 +82,10 @@ end
 // Calculate nxt_b_avg
 always_comb begin
    nxt_b_avg = b_avg;
-	b01   = b0>>3 + b1>>3;	
-	b23   = b2>>3 + b3>>3;
-	b56   = b5>>3 + b6>>3;
-	b78   = b7>>3 + b8>>3;
+	b01   = (b0>>3) + (b1>>3);	
+	b23   = (b2>>3) + (b3>>3);
+	b56   = (b5>>3) + (b6>>3);
+	b78   = (b7>>3) + (b8>>3);
 	b0123 = b01+b23;
 	b5678 = b56+b78;
 	nxt_b_avg = b0123+b5678;

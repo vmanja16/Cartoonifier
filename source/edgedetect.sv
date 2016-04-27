@@ -3,16 +3,27 @@ module edgedetect (
 	input	wire [71:0]	iGrid,
 	input wire [7:0]  iThreshold,
 	input wire        n_rst,
-	output reg        isEdge //0 if not edge, 1 if edge
+	input wire edgedetect_enable,
+	output reg        isEdge, //0 if not edge, 1 if edge
+	output reg	  mean_average_enable
 	);
 	wire	[7:0] left, right, top, btm, sum1, sum2, sum3, sum4;
 	wire	[7:0] intensity [8:0];
-	wire nxt_isedge;
-	
+	wire nxt_isEdge;
+	reg wait_enable;
 	
 	always @ (posedge clk) begin
-		if (n_rst == 0) isEdge <= 0;
-		else isEdge <= nxt_isedge;
+		if (n_rst == 0) begin 
+		  isEdge <= 0;
+		  wait_enable <=0;
+		  mean_average_enable <= 0;
+		end
+		else begin 
+  		  isEdge <= nxt_isEdge;
+		  wait_enable <= edgedetect_enable; // wait_enable is to allow for edge calculation
+ 		  mean_average_enable <= wait_enable;
+		end
+		  
 	end
 	
 	assign intensity[0] = iGrid[7:0];
@@ -30,11 +41,12 @@ module edgedetect (
 	assign top =   intensity[0] + (intensity[1]<<1) + intensity[2];
 	assign btm =   intensity[6] + (intensity[7]<<1) + intensity[8];
 	
-   assign sum1 = right - left;
+	assign sum1 = right - left;
 	assign sum2 = left  - right;
-   assign sum3 = top   - btm;
-   assign sum4 = btm   - top;
-   assign nxt_isedge = (( (sum1[7]==0) && (sum1 > iThreshold)) || 
+	assign sum3 = top   - btm;
+	assign sum4 = btm   - top;
+	
+	assign nxt_isEdge = (( (sum1[7]==0) && (sum1 > iThreshold)) || 
                        ( (sum2[7]==0) && (sum2 > iThreshold)) ||
                        ( (sum3[7]==0) && (sum3 > iThreshold)) ||
                        ( (sum4[7]==0) && (sum4 > iThreshold)) );
