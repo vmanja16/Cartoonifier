@@ -30,7 +30,10 @@ always_ff@(posedge clk, negedge n_rst)
 begin
 	if (1'b0 == n_rst)
 	begin
-
+		buffer_enable <= 0;
+		done_load_write <= 0;
+		buffer1[23:0] <= 0;
+		buffer2[23:0] <= 0;
 	end
 	else
 	begin
@@ -58,7 +61,8 @@ generate
 	begin
 		if (1'b0 == n_rst)
 		begin
-
+			buffer1[i+24-:23] <= buffer1[i-:23];
+			buffer2[i+24-:23] <= buffer2[i-:23];
 		end
 		else
 		begin
@@ -67,14 +71,14 @@ generate
 				if (!buffer_enable)
 					buffer1[i+24-:23] <= buffer1[i-:23];
 				else
-					buffer1[i+24-:23] <= buffer1[i-:23];
+					buffer2[i+24-:23] <= buffer2[i-:23];
 			end
 			else if (!master_waitrequest)
 			begin
 				if (buffer_enable)
 					buffer1[i+24-:23] <= buffer1[i-:23];
 				else
-					buffer1[i+24-:23] <= buffer1[i-:23];
+					buffer2[i+24-:23] <= buffer2[i-:23];
 			end
 		end
 	end

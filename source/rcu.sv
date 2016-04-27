@@ -111,7 +111,7 @@ flex_counter #(8) count_image_done
 	.clear(),
 	.count_enable(full_block_done),
 	.rollover_val(8'd80),
-	.rollover_flag(image_done),
+	.rollover_flag(image_done)
 );
 
 flex_counter #(10) count_full_block_done
@@ -121,7 +121,7 @@ flex_counter #(10) count_full_block_done
 	.clear(full_block_done),
 	.count_enable(block_done),
 	.rollover_val(10'd640),
-	.rollover_flag(full_block_done),
+	.rollover_flag(full_block_done)
 );
 
 flex_counter #(4) count_block_done
@@ -131,11 +131,11 @@ flex_counter #(4) count_block_done
 	.clear(block_done),
 	.count_enable(pixel_done),
 	.rollover_val(4'd6),
-	.rollover_flag(block_done),
+	.rollover_flag(block_done)
 );
 
 //address
-assign master_address = master_read ? 640*read_row+(read_col+ read_col_const*6): master_write ? 640*write_row+(write_col+write_col_const*6) : 0;
+assign master_address = master_read_enable ? 640*read_row+(read_col+ read_col_const*6): master_write_enable ? 640*write_row+(write_col+write_col_const*6) : 0;
 
 typedef enum bit [4:0] {idle, read_24, read_pulse, read_filter, shift_write_full_block, write_full_block, shift_read_buffer,
 	shift_write_block, write_block, shift_write, pulse, filter, wait_filter, wait_read_block, last_write, done} stateType;
@@ -219,10 +219,10 @@ end
 
 always_comb
 begin
-	master_read = 0;
+	master_read_enable = 0;
 	shift_enable8 = 0;
 	shift_enable24 = 0;
-	master_write = 0;
+	master_write_enable = 0;
 	pixel_enable = 0;
 	case(state)
 		idle:
@@ -239,9 +239,11 @@ begin
 			shift_enable24 = 1;
 		end
 		read_pulse:
+		begin
 			pixel_enable = 1;
 			master_read_enable = 1;
 			load_read_buffer = 1;
+		end
 		read_filter:
 		begin
 			master_read_enable = 1;
