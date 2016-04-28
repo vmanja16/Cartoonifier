@@ -90,12 +90,12 @@ assign I7 = tb_iGrid[15:8];
 assign I8 = tb_iGrid[7:0];
 
 tb_n_rst = 0;
-@(posedge tb_clk);
-tb_n_rst=1;
 tb_test_case = 0;
 tb_n_rst = 1;
 tb_intensity_enable = 0;
 tb_pixelData = 0;
+@(posedge tb_clk);
+tb_n_rst=1;
 
 //TEST 0
 @(posedge tb_clk);
