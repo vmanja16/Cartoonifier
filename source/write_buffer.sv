@@ -13,9 +13,7 @@ input logic n_rst,
 input logic [23:0] pixel_data,
 input logic pixel_done,
 input logic master_waitrequest,
-input logic shift_enable_write,
 output logic [23:0] master_writedata,
-output logic master_address,
 output logic done_write
 );
 

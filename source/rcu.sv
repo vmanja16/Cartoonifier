@@ -10,29 +10,28 @@ module rcu
 (
 input logic clk,
 input logic n_rst,
-input logic start,
+input logic [7:0] start,
 input logic pixel_done,
-input logic block_done,
-input logic full_block_done,
-input logic image_done,
 input logic done_read24,
 input logic done_shift8,
 input logic done_load_read_buffer,
 input logic done_write,
+input logic master_readdatavalid,
 output logic master_write_enable,
 output logic master_read_enable,
-output logic address,
+output logic [31:0] master_address,
 output logic pixel_enable,
 output logic shift_enable8,
 output logic shift_enable24,
-output logic shift_enable_write,
 output logic load_read_buffer
 );
 
 logic [9:0] read_row, write_row;
-logic [8:0] read_col, write_col;
-logic [6:0] read_col_const, write_col_const;
+logic [3:0] read_col, write_col;
+logic [7:0] read_col_const, write_col_const;
 logic read_row_enable, read_col_enable, write_row_enable, write_col_enable;
+logic block_done, full_block_done, image_done;
+logic wait_pd1, wait_pd2, wait_pd3, wait_bd1, wait_bd2, wait_fb1;
 
 //--------------------------read-----------------------------
 flex_counter #(10) read_count_row
@@ -75,7 +74,7 @@ flex_counter #(10) write_count_row
 	.n_rst(n_rst),
 	.clear(),
 	.count_enable(write_row_enable),
-	.rollover_val(10'd640),
+	.rollover_val(10'd638),
 	.rollover_flag(write_col_enable),
 	.count_out(write_row)
 );
@@ -86,7 +85,7 @@ flex_counter #(4) write_count_col
 	.n_rst(n_rst),
 	.clear(),
 	.count_enable(master_writeresponsevalid),
-	.rollover_val(4'd8),
+	.rollover_val(4'd6),
 	.rollover_flag(write_row_enable),
 	.count_out(write_col)
 );
@@ -131,23 +130,30 @@ flex_counter #(4) count_block_done
 	.clear(block_done),
 	.count_enable(pixel_done),
 	.rollover_val(4'd6),
-	.rollover_flag(block_done)
+	.rollover_flag(block_done),
 );
 
 //address
-assign master_address = master_read_enable ? 640*read_row+(read_col+ read_col_const*6): master_write_enable ? 640*write_row+(write_col+write_col_const*6) : 0;
+assign master_address = master_read_enable ? 9'd480*read_row+(read_col+ read_col_const*6): master_write_enable ? 9'd480*write_row+(write_col+write_col_const*6) : 0;
 
 typedef enum bit [4:0] {idle, read_24, read_pulse, read_filter, shift_write_full_block, write_full_block, shift_read_buffer,
 	shift_write_block, write_block, shift_write, pulse, filter, wait_filter, wait_read_block, last_write, done} stateType;
 stateType state;
 stateType next_state;
+logic next_pixel_done;
 
 always_ff@(posedge clk, negedge n_rst)
-begin
-	if (1'b0 == n_rst)
+begin 
+	if (1'b0 == n_rst) begin
 		state <= idle;
-	else
+		wait_pd1 <= 0; wait_pd2 <= 0; wait_pd3 <= 0;
+		wait_bd1 <= 0; wait_bd2 <= 0; wait_fb1 <= 0;
+	end
+	else begin
 		state <= next_state;
+		wait_pd1 <= pixel_done; wait_pd2 <= wait_pd1; wait_pd3 <= wait_pd2;
+		wait_bd1 <= block_done; wait_bd2 <= wait_bd1; wait_fb1 <= full_block_done;
+	end
 end
 
 always_comb
@@ -157,7 +163,7 @@ begin
 		idle:
 			next_state = start ? read_24 : idle;
 		read_24:
-			next_state = done_read24 ? read_filter : read_24;
+			next_state = done_read24 ? read_pulse : read_24;
 		read_pulse:
 			next_state = read_filter;
 		read_filter:
@@ -232,6 +238,13 @@ begin
 			shift_enable24 = 0;
 			master_write_enable = 0;
 			pixel_enable = 0;
+			read_row_enable = 0;
+			read_col_enable = 0;
+			write_row_enable = 0;
+			write_col_enable = 0;
+			read_row = 0; write_row = 0; read_col = 0; write_col = 0;
+			read_col_const = 0; write_col_const = 0;
+			master_address = 0;
 		end
 		read_24:
 		begin
