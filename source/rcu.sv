@@ -31,7 +31,7 @@ logic [3:0] read_col, write_col;
 logic [7:0] read_col_const, write_col_const;
 logic read_row_enable, read_col_enable, write_row_enable, write_col_enable;
 logic block_done, full_block_done, image_done;
-logic wait_pd1, wait_pd2, wait_pd3, wait_bd1, wait_bd2, wait_fb1;
+logic wait_pd1, wait_pd2, delay_pd, wait_bd1, delay_bd, delay_fb;
 
 //--------------------------read-----------------------------
 flex_counter #(10) read_count_row
@@ -151,8 +151,8 @@ begin
 	end
 	else begin
 		state <= next_state;
-		wait_pd1 <= pixel_done; wait_pd2 <= wait_pd1; wait_pd3 <= wait_pd2;
-		wait_bd1 <= block_done; wait_bd2 <= wait_bd1; wait_fb1 <= full_block_done;
+		wait_pd1 <= pixel_done; wait_pd2 <= wait_pd1; delay_pd <= wait_pd2;
+		wait_bd1 <= block_done; delay_bd <= wait_bd1; delay_fbd <= full_block_done;
 	end
 end
 
@@ -170,22 +170,22 @@ begin
 		begin
 			if (image_done)
 				next_state = last_write;
-			else if (full_block_done)
+			else if (delay_fbd)
 				next_state = shift_write_full_block;
 			else
 				if (done_load_read_buffer)
 				begin
-					if (block_done)
+					if (delay_bd)
 						next_state = shift_read_buffer;
-					else if (pixel_done)
+					else if (delay_pd)
 						next_state = pulse;
 					else
 						next_state = wait_filter;
 				end
 				else begin
-					if (block_done)
+					if (delay_bd)
 						next_state = wait_read_block;
-					else if (pixel_done)
+					else if (delay_pd)
 						next_state = pulse;
 					else
 						next_state = read_filter;
@@ -204,14 +204,14 @@ begin
 		pulse:
 			next_state = filter;
 		filter:
-			next_state = full_block_done ? shift_write_full_block : block_done ? shift_read_buffer : pixel_done ? pulse : filter;
+			next_state = delay_fbd ? shift_write_full_block : delay_bd ? shift_read_buffer : delay_pd ? pulse : filter;
 		wait_filter:
 		begin
-			if (full_block_done)
+			if (delay_fbd)
 				next_state = shift_write_full_block;
-			else if (block_done)
+			else if (delay_bd)
 				next_state = shift_read_buffer;
-			else if (pixel_done)
+			else if (delay_pd)
 				next_state = pulse;
 			else
 				next_state = wait_filter;

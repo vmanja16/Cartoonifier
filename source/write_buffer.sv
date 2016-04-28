@@ -13,7 +13,7 @@ input logic n_rst,
 input logic [23:0] pixel_data,
 input logic pixel_done,
 input logic master_waitrequest,
-output logic [23:0] master_writedata,
+output logic [31:0] master_writedata,
 output logic done_write
 );
 
@@ -82,14 +82,14 @@ generate
 	end
 endgenerate
 
-assign master_writedata = buffer_enable ? buffer1[143:119] : buffer2[143:119];
+assign master_writedata = buffer_enable ? {3'b00000000,buffer1[143:119]} : {3'b00000000, buffer2[143:119]};
 assign next_buffer_enable = done_load_write ? buffer_enable ? 0 : 1 : buffer_enable;
 
 flex_counter #(4) count_load
 (
 	.clk(clk),
 	.n_rst(n_rst),
-	.clear(done_8),
+	.clear(done_load_write),
 	.count_enable(pixel_done),
 	.rollover_val(4'd6),
 	.rollover_flag(done_load_write)
@@ -99,7 +99,7 @@ flex_counter #(4) count_write
 (
 	.clk(clk),
 	.n_rst(n_rst),
-	.clear(done_8),
+	.clear(done_write),
 	.count_enable(master_writeresponsevalid),
 	.rollover_val(4'd6),
 	.rollover_flag(done_write)
