@@ -17,7 +17,7 @@ module flex_counter
   input wire clear,
   input wire count_enable,
   input wire [NUM_CNT_BITS-1:0] rollover_val,
-//  output wire [NUM_CNT_BITS-1:0] count_out,
+  output wire [NUM_CNT_BITS-1:0] count_out,
   output reg rollover_flag
        //reg
 );
@@ -60,6 +60,6 @@ always_comb begin
 end // ending always_comb block
 
 // OUTPUT ASSIGNMENTS
-//assign count_out = count;
+assign count_out = count;
 
 endmodule
