@@ -6,6 +6,7 @@ add wave -noupdate -radix decimal /tb_intensity/tb_pixelData
 add wave -noupdate -radix decimal /tb_intensity/tb_intensity_enable
 add wave -noupdate -radix decimal /tb_intensity/tb_edgedetect_enable
 add wave -noupdate -radix decimal /tb_intensity/tb_iGrid
+add wave -noupdate -radix decimal /tb_intensity/tb_expected_iGrid
 add wave -noupdate -radix decimal /tb_intensity/tb_test_case
 add wave -noupdate -radix decimal /tb_intensity/r0
 add wave -noupdate -radix decimal /tb_intensity/g0
@@ -43,10 +44,9 @@ add wave -noupdate -radix decimal /tb_intensity/r8
 add wave -noupdate -radix decimal /tb_intensity/g8
 add wave -noupdate -radix decimal /tb_intensity/b8
 add wave -noupdate -radix decimal /tb_intensity/I8
-add wave -noupdate -radix decimal /tb_intensity/tb_expected_iGrid
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {8277 ps} 0} {{Cursor 2} {99219 ps} 0}
-quietly wave cursor active 1
+WaveRestoreCursors {{Cursor 1} {223766 ps} 0} {{Cursor 2} {78538 ps} 0}
+quietly wave cursor active 2
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
@@ -61,4 +61,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {105 ns}
+WaveRestoreZoom {0 ps} {525 ns}

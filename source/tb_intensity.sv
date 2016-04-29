@@ -2,7 +2,7 @@
 
 module tb_intensity();
 // Define parameters
-parameter CLK_PERIOD	= 2; //50 MHZ
+parameter CLK_PERIOD	= 20; //50 MHZ
 parameter NUM_TESTS 	= 9;
 parameter MAX_TEST_BIT = NUM_TESTS -1;
 parameter MAX_OUTPUT_BIT = 71;
@@ -33,6 +33,18 @@ reg [71:0] test_2 = {
 
 reg [71:0] test_3 = {
 8'd5, 8'd22, 8'd42, 8'd65, 8'd99, 8'd100, 8'd210, 8'd200, 8'd164};
+
+reg [23:0] expected_3 = {((test_3[71:64]>>2)+(test_3[63:56]>>1)+(test_3[55:48]>>2) ), 
+			 ((test_3[47:40]>>2)+(test_3[39:32]>>1)+(test_3[31:24]>>2) ),
+			 ((test_3[23:16]>>2)+(test_3[15:8]>>1)+(test_3[7:0]>>2) )};
+
+reg [23:0] expected_2 = {((test_2[71:64]>>2)+(test_2[63:56]>>1)+(test_2[55:48]>>2) ), 
+			 ((test_2[47:40]>>2)+(test_2[39:32]>>1)+(test_2[31:24]>>2) ),
+			 ((test_2[23:16]>>2)+(test_2[15:8]>>1)+(test_2[7:0]>>2) )};
+
+reg [23:0] expected_1 = {((test_1[71:64]>>2)+(test_1[63:56]>>1)+(test_1[55:48]>>2) ), 
+			 ((test_1[47:40]>>2)+(test_1[39:32]>>1)+(test_1[31:24]>>2) ),
+			 ((test_1[23:16]>>2)+(test_1[15:8]>>1)+(test_1[7:0]>>2) )};
 
 // Test Case expected outputs
 reg [MAX_OUTPUT_BIT:0] tb_expected_iGrid;
@@ -106,6 +118,11 @@ tb_pixelData <= {test_1, test_3,test_2};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
 @(posedge tb_clk);
+@(negedge tb_clk);
+tb_expected_iGrid = {expected_1, expected_3, expected_2};
+if(tb_iGrid ==tb_expected_iGrid )
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 @(posedge tb_clk);
 ////////TEST 1
 tb_test_case = 1;
@@ -116,7 +133,15 @@ tb_pixelData <= {test_3, test_2, test_1};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
 #(CLK_PERIOD);
+@(posedge tb_clk);
+tb_expected_iGrid = {expected_3, expected_2, expected_1};
+@(posedge tb_clk);
+if(tb_iGrid ==tb_expected_iGrid )
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
+
+
 /////// TEST 2
 tb_test_case = 2;
 tb_n_rst = 1;
@@ -126,6 +151,12 @@ tb_intensity_enable = 1;
 tb_intensity_enable = 0;
 tb_pixelData <= {test_2, test_3, test_1};
 #(CLK_PERIOD);
+@(posedge tb_clk);
+tb_expected_iGrid = {expected_2, expected_3, expected_1};
+@(negedge tb_clk);
+if(tb_iGrid == tb_expected_iGrid)
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
 //TEST 3
 tb_test_case = 3;
@@ -136,6 +167,12 @@ tb_pixelData <= {test_1, test_2,test_3};
 @(posedge tb_clk);
 tb_intensity_enable = 0;
 #(CLK_PERIOD);
+@(posedge tb_clk);
+tb_expected_iGrid = {expected_1, expected_2, expected_3};
+@(negedge tb_clk);
+if(tb_iGrid == tb_expected_iGrid)
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD * 2);
 
 //TEST 4
@@ -145,9 +182,17 @@ tb_n_rst = 1;
 tb_intensity_enable = 1;
 tb_pixelData <= {test_3, test_1, test_2};
 @(posedge tb_clk);
+tb_expected_iGrid = {expected_3, expected_1, expected_2};
+@(negedge tb_clk);
+if(tb_iGrid == tb_expected_iGrid)
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 tb_intensity_enable = 0;
 
 #(CLK_PERIOD);
+if(tb_iGrid == {expected_3, expected_1, expected_2})
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
 // TEST 5
 tb_test_case = 5;
@@ -156,9 +201,18 @@ tb_n_rst = 1;
 tb_intensity_enable = 1;
 tb_pixelData <= {test_2, test_1, test_3};
 @(posedge tb_clk);
+tb_expected_iGrid = {expected_2, expected_1, expected_3};
+@(negedge tb_clk);
+if(tb_iGrid == tb_expected_iGrid)
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 tb_intensity_enable = 0;
 
 #(CLK_PERIOD);
+@(negedge tb_clk);
+if(tb_iGrid == {expected_2, expected_1, expected_3})
+	$info("Test number %d passed!", tb_test_case);
+else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
 
 end
