@@ -26,11 +26,13 @@ reg [191:0] line1;
 reg [191:0] line2;
 reg [191:0] line3;
 reg [191:0] buffer;
+reg [575:0] line;
 reg [2:0] filter_const; 
 logic reset_filter_const;
 genvar i;
 
-assign pixelData = {line1[71+24*filter_const-:7'd72], line2[71+24*filter_const-:7'd72], line3[71+24*filter_const-:7'd72]};
+assign pixelData = {line3[191-24*filter_const-:7'd72], line2[191-24*filter_const-:7'd72], line1[191-24*filter_const-:7'd72]};
+//assign pixelData = {line[575-24*filter_const-:7'd72], line[383-24*filter_const-:7'd72], line[191-24*filter_const-:7'd72]};
 
 always_ff@(posedge clk, negedge n_rst)
 begin
@@ -40,33 +42,33 @@ begin
 		line1[23:0] <= 0;
 		line2[23:0] <= 0;
 		line3[23:0] <= 0;
+		//line[23:0] <= 0;
 	end
 	else if (master_readdatavalid)
 	begin
 		if (shift_enable24)
 		begin
 			line1[23:0] <= master_readdata[23:0];
-			line2[23:0] <= line1[191:167];
-			line3[23:0] <= line2[191:167];
+			line2[23:0] <= line1[191-:24];
+			line3[23:0] <= line2[191-:24];
+			//line[23:0] <= master_readdata[23:0];
 		end
 		if (load_read_buffer)
 			buffer[23:0] <= master_readdata[23:0];
 	end
 	else if (shift_enable8)
 	begin
-		/*buffer[191:0] <= 0;
-		line1[191:0] <= buffer[191:0];
-		line2[191:0] <= line1[191:0];
-		line3[191:0] <= line2[191:0];*/
 		buffer[23:0] <= 0;
-		line1[23:0] <= buffer[191:167];
-		line2[23:0] <= line1[191:167];
-		line3[23:0] <= line2[191:167];
+		line1[23:0] <= buffer[191-:24];
+		line2[23:0] <= line1[191-:24];
+		line3[23:0] <= line2[191-:24];
+		//line[23:0] <= buffer[191-:24];
 	end
 end
 
 generate
 	for (i = 23; i<191; i=i+24)
+	//for (i = 23; i < 575; i=i+24)
 	always_ff@(posedge clk, negedge n_rst)
 	begin
 		if (1'b0 == n_rst)
@@ -74,6 +76,7 @@ generate
 			line1[i+24-:24] <= 0;
 			line2[i+24-:24] <= 0;
 			line3[i+24-:24] <= 0;
+			//line[i+24-:24] <= 0;
 			buffer[i+24-:24] <= 0;
 		end	
 		else if (master_readdatavalid)
@@ -83,6 +86,7 @@ generate
 				line1[i+24-:24] <= line1[i-:24];
 				line2[i+24-:24] <= line2[i-:24];
 				line3[i+24-:24] <= line3[i-:24];
+				//line[i+24-:24] <= line[i-:24];
 			end
 			if (load_read_buffer)
 				buffer[i+24-:24] <= buffer[i-:24];
@@ -93,6 +97,7 @@ generate
 			line1[i+24-:24] <= line1[i-:24];
 			line2[i+24-:24] <= line2[i-:24];
 			line3[i+24-:24] <= line3[i-:24];
+			//line[i+24-:24] <= line[i-:24];
 		end
 	end
 endgenerate

@@ -10,13 +10,14 @@ module rcu
 (
 input logic clk,
 input logic n_rst,
-input logic [7:0] start,
+input logic [31:0] start,
 input logic pixel_done,
 input logic done_read24,
 input logic done_shift8,
 input logic done_load_read_buffer,
 input logic done_write,
 input logic master_readdatavalid,
+input logic master_writeresponsevalid,
 output logic master_write_enable,
 output logic master_read_enable,
 output logic [31:0] master_address,
@@ -26,128 +27,31 @@ output logic shift_enable24,
 output logic load_read_buffer
 );
 
-logic [9:0] read_row, write_row;
-logic [3:0] read_col, write_col;
-logic [7:0] read_col_const, write_col_const;
 logic read_row_enable, read_col_enable, write_row_enable, write_col_enable;
 logic block_done, full_block_done, image_done;
-logic wait_pd1, wait_pd2, delay_pd, wait_bd1, delay_bd, delay_fb;
-
-//--------------------------read-----------------------------
-flex_counter #(10) read_count_row
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(),
-	.count_enable(read_row_enable),
-	.rollover_val(10'd640),
-	.rollover_flag(read_col_enable),
-	.count_out(read_row)
-);
-
-flex_counter #(4) read_count_col
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(read_row_enable),
-	.count_enable(master_readdatavalid),
-	.rollover_val(4'd8),
-	.rollover_flag(read_row_enable),
-	.count_out(read_col)
-);
-
-flex_counter #(8) read_count_const
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(),
-	.count_enable(read_col_enable),
-	.rollover_val(8'd80),
-	.rollover_flag(),
-	.count_out(read_col_const)
-);
-
-//--------------------------write----------------------------
-flex_counter #(10) write_count_row
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(),
-	.count_enable(write_row_enable),
-	.rollover_val(10'd638),
-	.rollover_flag(write_col_enable),
-	.count_out(write_row)
-);
-
-flex_counter #(4) write_count_col
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(),
-	.count_enable(master_writeresponsevalid),
-	.rollover_val(4'd6),
-	.rollover_flag(write_row_enable),
-	.count_out(write_col)
-);
-
-flex_counter #(8) write_count_const
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(),
-	.count_enable(write_col_enable),
-	.rollover_val(8'd80),
-	.rollover_flag(),
-	.count_out(write_col_const)
-);
-
-//--------------------------block_done full_block_done and image_done--------------------------
-
-flex_counter #(8) count_image_done
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(),
-	.count_enable(full_block_done),
-	.rollover_val(8'd80),
-	.rollover_flag(image_done)
-);
-
-flex_counter #(10) count_full_block_done
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(full_block_done),
-	.count_enable(block_done),
-	.rollover_val(10'd640),
-	.rollover_flag(full_block_done)
-);
-
-flex_counter #(4) count_block_done
-(
-	.clk(clk),
-	.n_rst(n_rst),
-	.clear(block_done),
-	.count_enable(pixel_done),
-	.rollover_val(4'd6),
-	.rollover_flag(block_done),
-);
+logic wait_pd1, wait_pd2, delay_pd, wait_bd1, delay_bd, delay_fbd;
+logic [31:0] read_row;
+logic [31:0] read_col;
+logic [31:0] write_row;
+logic [31:0] write_col;
+logic [31:0] read_col_const;
+logic [31:0] write_col_const;
 
 //address
-assign master_address = master_read_enable ? 9'd480*read_row+(read_col+ read_col_const*6): master_write_enable ? 9'd480*write_row+(write_col+write_col_const*6) : 0;
+assign master_address = (master_read_enable) ? 480*read_row+(read_col+ read_col_const*6): (master_write_enable) ? 480*write_row+(write_col+write_col_const*6) : 0;
 
 typedef enum bit [4:0] {idle, read_24, read_pulse, read_filter, shift_write_full_block, write_full_block, shift_read_buffer,
-	shift_write_block, write_block, shift_write, pulse, filter, wait_filter, wait_read_block, last_write, done} stateType;
+	shift_write_block, write_block, pulse_filter_block, filter_block, shift_write, pulse, filter, wait_filter, wait_read_block, last_write, done} stateType;
 stateType state;
 stateType next_state;
-logic next_pixel_done;
+//logic next_pixel_done;
 
 always_ff@(posedge clk, negedge n_rst)
 begin 
 	if (1'b0 == n_rst) begin
 		state <= idle;
-		wait_pd1 <= 0; wait_pd2 <= 0; wait_pd3 <= 0;
-		wait_bd1 <= 0; wait_bd2 <= 0; wait_fb1 <= 0;
+		wait_pd1 <= 0; wait_pd2 <= 0; delay_pd <= 0;
+		wait_bd1 <= 0; delay_bd <= 0; delay_fbd <= 0;
 	end
 	else begin
 		state <= next_state;
@@ -161,7 +65,7 @@ begin
 	next_state = state;
 	case(state)
 		idle:
-			next_state = start ? read_24 : idle;
+			next_state = (start == 32'h0001) ? read_24 : idle;
 		read_24:
 			next_state = done_read24 ? read_pulse : read_24;
 		read_pulse:
@@ -186,7 +90,7 @@ begin
 					if (delay_bd)
 						next_state = wait_read_block;
 					else if (delay_pd)
-						next_state = pulse;
+						next_state = read_pulse;
 					else
 						next_state = read_filter;
 				end
@@ -200,7 +104,11 @@ begin
 		shift_write_block:
 			next_state = write_block;
 		write_block:
-			next_state = done_write ? read_pulse : write_block;
+			next_state = done_write ? (read_row == 480) ? pulse_filter_block: read_pulse : write_block;
+		pulse_filter_block:
+			next_state = filter_block;
+		filter_block:
+			next_state = delay_fbd ? shift_write_full_block : delay_pd ? pulse_filter_block : filter_block; 
 		pulse:
 			next_state = filter;
 		filter:
@@ -230,6 +138,7 @@ begin
 	shift_enable24 = 0;
 	master_write_enable = 0;
 	pixel_enable = 0;
+	load_read_buffer = 0;
 	case(state)
 		idle:
 		begin
@@ -238,13 +147,13 @@ begin
 			shift_enable24 = 0;
 			master_write_enable = 0;
 			pixel_enable = 0;
-			read_row_enable = 0;
-			read_col_enable = 0;
-			write_row_enable = 0;
-			write_col_enable = 0;
-			read_row = 0; write_row = 0; read_col = 0; write_col = 0;
-			read_col_const = 0; write_col_const = 0;
-			master_address = 0;
+			load_read_buffer = 0;
+			//read_row_enable = 0;
+			//read_col_enable = 0;
+			//write_row_enable = 0;
+			//write_col_enable = 0;
+			//read_row = 0; write_row = 0; read_col = 0; write_col = 0;
+			//read_col_const = 0; write_col_const = 0;
 		end
 		read_24:
 		begin
@@ -254,7 +163,7 @@ begin
 		read_pulse:
 		begin
 			pixel_enable = 1;
-			master_read_enable = 1;
+			master_read_enable = 0;
 			load_read_buffer = 1;
 		end
 		read_filter:
@@ -282,7 +191,13 @@ begin
 		write_block:
 		begin
 			master_write_enable = 1;
-		end		
+		end
+		pulse_filter_block:
+			pixel_enable = 1;
+		filter_block:
+		begin
+			pixel_enable = 0;
+		end
 		pulse:
 		begin
 			pixel_enable = 1;
@@ -293,11 +208,12 @@ begin
 		end		
 		wait_filter:
 		begin
-			pixel_enable = 1;
+			pixel_enable = 0;
 		end
 		wait_read_block:
 		begin
 			master_read_enable = 1;
+			load_read_buffer = 1;
 		end		
 		last_write:
 		begin
@@ -305,5 +221,105 @@ begin
 		end	
 	endcase
 end
+
+//--------------------------read-----------------------------
+flex_counter #(32) read_count_row
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(read_col_enable),
+	.count_enable(read_row_enable),
+	.rollover_val(32'd480),
+	.rollover_flag(read_col_enable),
+	.count_out(read_row)
+);
+
+flex_counter #(32) read_count_col
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(read_row_enable),
+	.count_enable(master_readdatavalid),
+	.rollover_val(32'd8),
+	.rollover_flag(read_row_enable),
+	.count_out(read_col)
+);
+
+flex_counter #(32) read_count_const
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(),
+	.count_enable(read_col_enable),
+	.rollover_val(32'd106),
+	.rollover_flag(),
+	.count_out(read_col_const)
+);
+
+//--------------------------write----------------------------
+flex_counter #(32) write_count_col
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(write_row_enable),
+	.count_enable(master_writeresponsevalid),
+	.rollover_val(32'd6),
+	.rollover_flag(write_row_enable),
+	.count_out(write_col)
+);
+
+flex_counter #(32) write_count_row
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(write_col_enable),
+	.count_enable(write_row_enable),
+	.rollover_val(32'd477),
+	.rollover_flag(write_col_enable),
+	.count_out(write_row)
+);
+
+flex_counter #(32) write_count_const
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(),
+	.count_enable(write_col_enable),
+	.rollover_val(32'd105),
+	.rollover_flag(),
+	.count_out(write_col_const)
+);
+
+//--------------------------block_done full_block_done and image_done--------------------------
+
+flex_counter #(3) count_block_done
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(block_done),
+	.count_enable(pixel_done),
+	.rollover_val(3'd6),
+	.rollover_flag(block_done)
+);
+
+flex_counter #(10) count_full_block_done
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(full_block_done),
+	.count_enable(block_done),
+	.rollover_val(10'd478),
+	.rollover_flag(full_block_done)
+);
+
+flex_counter #(8) count_image_done
+(
+	.clk(clk),
+	.n_rst(n_rst),
+	.clear(),
+	.count_enable(full_block_done),
+	.rollover_val(8'd106),
+	.rollover_flag(image_done)
+);
 
 endmodule

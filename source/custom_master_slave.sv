@@ -43,7 +43,6 @@ module custom_master_slave #(
 		  
 );
 
-
 parameter START_BYTE = 32'hF00BF00B;
 parameter STOP_BYTE = 32'hDEADF00B;
 parameter SDRAM_ADDR = 32'h08000000;
@@ -55,6 +54,10 @@ logic [NUMREGS-1:0][REGWIDTH-1:0] csr_registers;  		// Command and Status Regist
 logic [NUMREGS-1:0] reg_index, nextRegIndex;
 logic [NUMREGS-1:0][REGWIDTH-1:0] read_data_registers;  //Store SDRAM read data for display
 logic new_data_flag;
+logic master_writeresponsevalid;
+logic write_enable, read_enable;
+logic [31:0] our_address;
+logic [31:0] our_writedata;
 
 typedef enum {IDLE, WRITE, WRITE_WAIT, READ_REQ, READ_WAIT, READ_ACK, READ_DATA} state_t;
 state_t state, nextState;
@@ -141,7 +144,7 @@ always_comb begin
 				if (read_enable)
 					nextAddress = our_address;
 				else
-					nextAddress = address - 4 ;	
+					nextAddress = address - 4 ;
 				nextState = READ_DATA;
 				nextRegIndex = reg_index - 1;
 			end
@@ -163,23 +166,51 @@ always_comb begin
 	master_read = 1'b0;
 	master_writedata = 32'h0;
 	master_address = 32'hbad1bad1;
-	case(state) 
+	master_writeresponsevalid = 1'b0;
+	case(state)
 		WRITE : begin 
-			master_write = 1;
-			master_address =  address;
-			master_writedata = {8'h00,rdwr_address[2],rdwr_address[2],rdwr_address[2],rdwr_address[2],
+			if (!master_waitrequest)
+				master_writeresponsevalid = 1;
+			if (write_enable)
+			begin
+				master_address = our_address;
+				master_writedata = our_writedata;
+			end
+			else
+			begin
+				master_address = address;
+				master_writedata = {8'h00,rdwr_address[2],rdwr_address[2],rdwr_address[2],rdwr_address[2],
 			rdwr_address[2],rdwr_address[2],rdwr_address[2],rdwr_address[2],
 			rdwr_address[1],rdwr_address[1],rdwr_address[1],rdwr_address[1],
 			rdwr_address[1],rdwr_address[1],rdwr_address[1],rdwr_address[1],
 			rdwr_address[0],rdwr_address[0],rdwr_address[0],rdwr_address[0],
 			rdwr_address[0],rdwr_address[0],rdwr_address[0],rdwr_address[0]};
+			end
+			master_write = 1;
+			
 		end 
 		READ_REQ : begin 
-			master_address = address;
-			master_read = 1;	
+			if (read_enable)
+				master_address = our_address;
+			else
+				master_address = address;
+			master_read = 1;
 		end
 	endcase
 end
+
+cartoonifier CARTOON 
+(
+.clk(clk),
+.n_rst(reset_n),
+.master_writeresponsevalid(master_writeresponsevalid),
+.master_readdata(master_readdata),
+.start(csr_registers[0]),
+.master_writedata(our_writedata),
+.master_read_enable(read_enable),
+.master_write_enable(write_enable),
+.master_address(our_address)
+);
 
 endmodule
 

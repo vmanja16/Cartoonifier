@@ -83,7 +83,7 @@ generate
 	end
 endgenerate
 
-assign master_writedata = buffer_enable ? {8'h00,buffer1[143:119]} : {8'h00, buffer2[143:119]};
+assign master_writedata = buffer_enable ? {8'h00,buffer1[143-:24]} : {8'h00, buffer2[143-:24]};
 assign next_buffer_enable = done_load_write ? buffer_enable ? 0 : 1 : buffer_enable ? 1 : 0;
 
 flex_counter #(4) count_load
