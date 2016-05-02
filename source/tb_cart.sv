@@ -352,20 +352,9 @@ module tb_cart();
 				@ (posedge tb_clk);
 				#(6 * CLK_PERIOD);
 
-				// Capture the result pixel (B=LSB,R=MSB as per 24bpp form of 8.8.8.0.0 RGBAX format)
+				// Capture the result pixel
 				tb_row_pass_output[r][c] = tb_f_pixel;
-				/*
-				if (tb_isEdge == 1) begin
-				tb_row_pass_output[r][c][2] = 0;
-				tb_row_pass_output[r][c][1] = 0;
-				tb_row_pass_output[r][c][0] = 0;
-				end
-				else begin
-				tb_row_pass_output[r][c][2] = tb_input_image[r][c][2];
-				tb_row_pass_output[r][c][1] = tb_input_image[r][c][1];
-				tb_row_pass_output[r][c][0] = tb_input_image[r][c][0];
-				end
-				*/
+				
 				// Add some spacing between pixel frames
 				#(2 * CLK_PERIOD);
 			end

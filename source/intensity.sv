@@ -19,7 +19,7 @@ always @(posedge clk) begin
   if (n_rst==0) edgedetect_enable <= 0;
   else edgedetect_enable <= nxt_edgedetect_enable;
 end
-
+// Call icomb on each pixel
 icomb IN0 ( .rgb(pixelData[215:192]), .oIntensity(i0) );
 icomb IN1 ( .rgb(pixelData[191:168]), .oIntensity(i1) );
 icomb IN2 ( .rgb(pixelData[167:144]), .oIntensity(i2) );
@@ -30,6 +30,7 @@ icomb IN6 ( .rgb(pixelData[71:48]),   .oIntensity(i6) );
 icomb IN7 ( .rgb(pixelData[47:24]),   .oIntensity(i7) );
 icomb IN8 ( .rgb(pixelData[23:0]),    .oIntensity(i8) );
 
+// chain enable from the rcu   
 always_comb begin
   nxt_iGrid = {i0, i1, i2, i3, i4, i5, i6, i7, i8};
   nxt_edgedetect_enable = 0;

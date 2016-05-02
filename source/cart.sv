@@ -6,6 +6,7 @@ module cart ( input logic clk, n_rst, intensity_enable,
 reg [71:0] iGrid;
 wire isEdge, mean_average_enable;
 
+   // port maps
 
 intensity INT(	.clk(clk),
 		.n_rst(n_rst),

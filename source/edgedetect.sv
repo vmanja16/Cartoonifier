@@ -25,7 +25,7 @@ module edgedetect (
 		end
 		  
 	end
-	
+	// assign statements for combinational logic
 	assign intensity[0] = iGrid[7:0];
 	assign intensity[1] = iGrid[15:8];
 	assign intensity[2] = iGrid[23:16];
@@ -45,7 +45,7 @@ module edgedetect (
 	assign sum2 = left  - right;
 	assign sum3 = top   - btm;
 	assign sum4 = btm   - top;
-	
+	// isEdge is 1 if any difference is greater than the threshold. Also checks for negatives.
 	assign nxt_isEdge = (( (sum1[7]==0) && (sum1 > iThreshold)) || 
                        ( (sum2[7]==0) && (sum2 > iThreshold)) ||
                        ( (sum3[7]==0) && (sum3 > iThreshold)) ||

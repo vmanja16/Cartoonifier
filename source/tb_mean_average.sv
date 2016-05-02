@@ -1,5 +1,5 @@
 // $Id: $
-// File name:   tb_edgedetect.sv
+// File name:   tb.mean_average.sv
 // Created:     4/22/2016
 // Author:      Vikram Manja
 // Lab Section: 5
@@ -10,8 +10,8 @@
 
 module tb_mean_average();
 	
-	parameter		INPUT_FILENAME		= "./docs/test_7.bmp";
-	parameter		RESULT1_FILENAME		= "./docs/filtered_7.bmp";
+	parameter		INPUT_FILENAME		= "./docs/test_2.bmp";
+	parameter		RESULT1_FILENAME		= "./docs/filtered_2.bmp";
 
 	
 	// Define file io offset constants
@@ -367,21 +367,9 @@ module tb_mean_average();
 				@ (posedge tb_clk);
 				#(6 * CLK_PERIOD);
 
-				// Capture the result pixel (B=LSB,R=MSB as per 24bpp form of 8.8.8.0.0 RGBAX format)
+				// Capture the result pixel
 				tb_row_pass_output[r][c] = tb_f_pixel;
-				/*
-				if (tb_isEdge == 1) begin
-				tb_row_pass_output[r][c][2] = 0;
-				tb_row_pass_output[r][c][1] = 0;
-				tb_row_pass_output[r][c][0] = 0;
-				end
-				else begin
-				tb_row_pass_output[r][c][2] = tb_input_image[r][c][2];
-				tb_row_pass_output[r][c][1] = tb_input_image[r][c][1];
-				tb_row_pass_output[r][c][0] = tb_input_image[r][c][0];
-				end
-				*/
-				// Add some spacing between pixel frames
+			
 				#(2 * CLK_PERIOD);
 			end
 			// Finished a row of pixels
@@ -389,7 +377,7 @@ module tb_mean_average();
 		
 		// Populate the image data from the first pass into it's result file
 		dump_image_buffer_to_file(tb_row_pass_output);
-		
+		$finish;
 	end
 	
 	

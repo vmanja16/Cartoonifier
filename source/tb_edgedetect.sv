@@ -353,6 +353,7 @@ module tb_edgedetect();
 				send_frame(tb_input_frame);
 				
 				// Capture the result pixel (B=LSB,R=MSB as per 24bpp form of 8.8.8.0.0 RGBAX format)
+			   // turn edge black is isEdge
 				if (tb_isEdge == 1) begin
 				tb_row_pass_output[r][c][2] = 0;
 				tb_row_pass_output[r][c][1] = 0;

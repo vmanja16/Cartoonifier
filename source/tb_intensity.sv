@@ -109,6 +109,8 @@ tb_pixelData = 0;
 @(posedge tb_clk);
 tb_n_rst=1;
 
+// run tests and check if equal to R/4 + G/2 +B/2
+   
 //TEST 0
 @(posedge tb_clk);
 tb_test_case = 1;
@@ -125,7 +127,7 @@ if(tb_iGrid ==tb_expected_iGrid )
 else $error("Test number %d failed!", tb_test_case);
 @(posedge tb_clk);
 ////////TEST 1
-tb_test_case = 1;
+tb_test_case = 2;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
@@ -143,7 +145,7 @@ else $error("Test number %d failed!", tb_test_case);
 
 
 /////// TEST 2
-tb_test_case = 2;
+tb_test_case = 3;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
@@ -159,7 +161,7 @@ if(tb_iGrid == tb_expected_iGrid)
 else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
 //TEST 3
-tb_test_case = 3;
+tb_test_case = 4;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
@@ -176,7 +178,7 @@ else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD * 2);
 
 //TEST 4
-tb_test_case = 4;
+tb_test_case = 5;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
@@ -195,7 +197,7 @@ if(tb_iGrid == {expected_3, expected_1, expected_2})
 else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
 // TEST 5
-tb_test_case = 5;
+tb_test_case = 6;
 tb_n_rst = 1;
 @(posedge tb_clk);
 tb_intensity_enable = 1;
@@ -207,12 +209,7 @@ if(tb_iGrid == tb_expected_iGrid)
 	$info("Test number %d passed!", tb_test_case);
 else $error("Test number %d failed!", tb_test_case);
 tb_intensity_enable = 0;
-
 #(CLK_PERIOD);
-@(negedge tb_clk);
-if(tb_iGrid == {expected_2, expected_1, expected_3})
-	$info("Test number %d passed!", tb_test_case);
-else $error("Test number %d failed!", tb_test_case);
 #(CLK_PERIOD*2);
 
 end
