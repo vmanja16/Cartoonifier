@@ -1,0 +1,6 @@
+{
+  "name": "Cartoonifier",
+  "tagline": "ECE337 cartoonifier scripts",
+  "body": "# Cartoonifier\r\nECE337 cartoonifier scripts\r\n\r\nThis repository was used to create an image cartoonifier in system verilog.\r\nThe image is \"cartoonified\" by blackening edges and averaging colors in between.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
